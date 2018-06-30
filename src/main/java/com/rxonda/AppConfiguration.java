@@ -1,6 +1,7 @@
 package com.rxonda;
 
 import java.util.Properties;
+import java.util.concurrent.Executors;
 
 import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
@@ -9,6 +10,7 @@ import com.rxonda.repo.PersonRepository;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -21,14 +23,22 @@ import org.springframework.web.reactive.function.server.RequestPredicates;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.RouterFunctions;
 
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
+
 @Configuration
 @EnableWebFlux
 @EnableJpaRepositories(basePackageClasses=PersonRepository.class)
 public class AppConfiguration {
 
     @Bean
-    public PersonHandler personHandler(PersonRepository personRepository) {
-        return new PersonHandler(personRepository);
+    public Scheduler jdbcScheduler(@Value("${jdbc-connection-pool-size}") Integer connectionPoolSize) {
+        return Schedulers.fromExecutor(Executors.newFixedThreadPool(connectionPoolSize));
+    }
+
+    @Bean
+    public PersonHandler personHandler(PersonRepository personRepository, Scheduler jdbcScheduler) {
+        return new PersonHandler(personRepository, jdbcScheduler);
     }
 
     @Bean

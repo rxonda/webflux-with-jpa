@@ -11,23 +11,27 @@ import static org.springframework.web.reactive.function.BodyInserters.fromObject
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
 
 public class PersonHandler {
-    
-    private PersonRepository personRepository;
 
-    public PersonHandler(PersonRepository personRepository) {
+    private final PersonRepository personRepository;
+
+    private final Scheduler scheduler;
+
+    public PersonHandler(PersonRepository personRepository, Scheduler scheduler) {
         this.personRepository = personRepository;
+        this.scheduler = scheduler;
     }
 
     public Mono<ServerResponse> list(ServerRequest request) {
-        Flux<Person> people = Flux.fromIterable(this.personRepository.findAll());
+        Flux<Person> people = Flux.defer(() -> Flux.fromIterable(this.personRepository.findAll())).subscribeOn(scheduler);
         return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(people, Person.class);
     }
     
     public Mono<ServerResponse> show(ServerRequest request) {
         Long personId = Long.valueOf(request.pathVariable("id"));
-        Mono<Person> personMono = Mono.just(this.personRepository.findById(personId).orElse(new Person()));
+        Mono<Person> personMono = Mono.fromCallable(() -> this.personRepository.findById(personId).orElse(new Person())).publishOn(scheduler);
         
 		return personMono
 				.flatMap(person -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(fromObject(person)))
