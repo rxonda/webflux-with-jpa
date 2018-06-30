@@ -1,7 +1,6 @@
 package com.rxonda;
 
 import java.util.Properties;
-import java.util.concurrent.Executors;
 
 import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
@@ -10,49 +9,18 @@ import com.rxonda.repo.PersonRepository;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-import org.springframework.http.server.reactive.HttpHandler;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
-import org.springframework.web.reactive.function.server.RouterFunction;
-import org.springframework.web.reactive.function.server.RouterFunctions;
-import org.springframework.web.reactive.function.server.ServerResponse;
-
-import reactor.core.scheduler.Scheduler;
-import reactor.core.scheduler.Schedulers;
-
-import static org.springframework.web.reactive.function.server.RequestPredicates.*;
-import static org.springframework.http.MediaType.*;
 
 @Configuration
 @EnableJpaRepositories(basePackageClasses=PersonRepository.class)
-public class AppConfiguration {
-
-    @Bean
-    Scheduler jdbcScheduler(@Value("${jdbc-connection-pool-size}") Integer connectionPoolSize) {
-        return Schedulers.fromExecutor(Executors.newFixedThreadPool(connectionPoolSize));
-    }
-
-    @Bean
-    PersonHandler personHandler(PersonRepository personRepository, Scheduler jdbcScheduler) {
-        return new PersonHandler(personRepository, jdbcScheduler);
-    }
-
-    @Bean
-    HttpHandler webHandler(PersonHandler personHandler) {
-        RouterFunction<ServerResponse> router = RouterFunctions
-            .route(GET("/person").and(accept(APPLICATION_JSON)), personHandler::list)
-            .andRoute(GET("/person/{id}").and(accept(APPLICATION_JSON)), personHandler::show)
-            .andRoute(POST("/person").and(contentType(APPLICATION_JSON)), personHandler::save);
-
-        return RouterFunctions.toHttpHandler(router);
-    }
-
+public class PersistencyConfiguration {
+    
     @Bean(destroyMethod = "close")
     DataSource dataSource(Environment env) {
         HikariConfig dataSourceConfig = new HikariConfig();

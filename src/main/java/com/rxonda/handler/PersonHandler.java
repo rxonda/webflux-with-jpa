@@ -1,4 +1,4 @@
-package com.rxonda;
+package com.rxonda.handler;
 
 import com.rxonda.domain.Person;
 import com.rxonda.repo.PersonRepository;
