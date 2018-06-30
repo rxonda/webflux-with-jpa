@@ -31,10 +31,17 @@ public class PersonHandler {
     
     public Mono<ServerResponse> show(ServerRequest request) {
         Long personId = Long.valueOf(request.pathVariable("id"));
-        Mono<Person> personMono = Mono.fromCallable(() -> this.personRepository.findById(personId).orElse(new Person())).publishOn(scheduler);
-        
-		return personMono
-				.flatMap(person -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(fromObject(person)))
-                .switchIfEmpty(ServerResponse.notFound().build());
+        return Mono.fromCallable(() -> this.personRepository.findById(personId).orElse(new Person()))
+            .publishOn(scheduler)
+            .flatMap(person -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(fromObject(person)))
+            .switchIfEmpty(ServerResponse.notFound().build());
+    }
+
+    public Mono<ServerResponse> save(ServerRequest request) {
+        return request
+            .bodyToMono(Person.class)
+            .flatMap(person -> Mono.fromCallable(() -> this.personRepository.save(person)))
+            .publishOn(scheduler)
+            .flatMap(person -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(fromObject(person)));
     }
 }
