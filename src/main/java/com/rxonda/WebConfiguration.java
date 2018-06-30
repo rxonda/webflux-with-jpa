@@ -25,7 +25,7 @@ import static org.springframework.http.MediaType.*;
 class WebConfiguration {
     @Bean
     Scheduler jdbcScheduler(Environment env) {
-            return Schedulers.fromExecutor(Executors.newFixedThreadPool(env.getRequiredProperty("jdbc.connection.pool.size", Integer.class)));
+        return Schedulers.fromExecutor(Executors.newFixedThreadPool(env.getRequiredProperty("jdbc.connection.pool.size", Integer.class)));
     }
 
     @Bean
@@ -42,7 +42,7 @@ class WebConfiguration {
     }
 
     @Bean
-    HttpHandler webHandler(RouterFunction routerFunction) {
+    HttpHandler webHandler(RouterFunction<ServerResponse> routerFunction) {
         return RouterFunctions.toHttpHandler(routerFunction);
     }
 
