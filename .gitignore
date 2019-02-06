@@ -6,3 +6,5 @@ build
 .settings
 .vscode
 .sts4-cache
+.attach_pid*
+.idea
